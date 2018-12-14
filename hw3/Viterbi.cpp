@@ -44,6 +44,11 @@ void Viterbi::disambigOrder2(char *line)
 {
     VocabString words[MAXCHARCOUNTPERLINE];
     unsigned len = Vocab::parseWords(line, words, MAXCHARCOUNTPERLINE);
+    if (len == 0) {
+        vector <union CNChar> ans(0);
+        showAns(ans);
+        return;
+    }
     vector <LogP> delta[len];
     vector <int> path(len);
     vector <union CNChar> candidates[len];
@@ -133,6 +138,12 @@ void Viterbi::disambigOrder3(char *line)
 {
     VocabString words[MAXCHARCOUNTPERLINE];
     unsigned len = Vocab::parseWords(line, words, MAXCHARCOUNTPERLINE);
+    const LogP _maxP = (-100.0) * len;
+    if (len == 0) {
+        vector <union CNChar> ans(0);
+        showAns(ans);
+        return;
+    }
     vector < vector<LogP> > delta[len];
     vector <int> path(len);
     vector <union CNChar> candidates[len];
@@ -150,6 +161,24 @@ void Viterbi::disambigOrder3(char *line)
         }            
     }
 
+    if (len == 1) {
+        int selectedk = NEG_INDEX;
+        LogP maxP = _maxP;
+        LogP p;
+        for (int k = 0; k < candidates[0].size(); k++) {
+            p = utils->getInitialProb(candidates[0][k]);
+            if (p > maxP) {
+                maxP = p;
+                selectedk = k;
+            }
+        }
+
+        vector<union CNChar> ans(1);
+        ans[0] = candidates[0][selectedk];
+        showAns(ans);
+        return;
+    }
+
     for (int L = 1; L < len; L++) {
         delta[L].resize(candidates[L].size());
         for (int _L = 0; _L < delta[L].size(); _L++)
@@ -164,7 +193,6 @@ void Viterbi::disambigOrder3(char *line)
             utils->getInitialProb(candidates[0][j]);
 
     LogP logProb;
-    const LogP _maxP = (-100.0) * len;
 
     for (int L = 2; L < len; L++) {
         for (int i = 0; i < candidates[L].size(); i++)
